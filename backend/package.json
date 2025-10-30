@@ -1,0 +1,15 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "A begineer project to MERN stack web devlopment.",
+  "main": "server.js",
+  "scripts": {
+    "test": "start"
+  },
+  "author": "Akshat Amarnath Kushnoor",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.19.2"
+  }
+}
