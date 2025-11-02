@@ -1,4 +1,6 @@
 import mongooose from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const refreshTokenSchema = new mongooose.Schema({
     token : {
@@ -58,12 +60,53 @@ const userSchema = new mongooose.Schema({
 },
 {timestamps:true});
 
-export const user = mongooose.model("user",userSchema);
+// user methods
+userSchema.pre('save' , async function(next){
+    if(!this.isModified('password')){
+        next();
+    }
+    try {
+        this.password = await bcrypt.hash(this.password,18);
+    next();}
+    catch(error){
+        next(error); // Error Handleing Must revisit
+    }
 
-//* A simple data model for a Productivity web App
-// follows this flow (expected for now)
-// 1. User defines his goal
-// 2. User gets detailed routine with tasks for the day
-// 3. User completes the task and can see the progress
-// 4. User creates a routine for the day
+});
+
+userSchema.methods.comparePassword = async function(password){
+    try {
+        return await bcrypt.compare(password,this.password);
+    } catch (error) {
+        next(error); // Error Handleing Must revisit
+    }
+};
+
+userSchema.methods.refreshTokens = async function(token) {
+    try {
+        this.refreshToken.push({token});
+        if(this.refreshTokens.length > 5) {
+            this.refreshTokens = this.refreshTokens.slice(-5);
+
+        }
+    } 
+    catch (error) {
+        next(error); // Error Handleing Must revisit
+    };
+    return this.save();
+};
+
+userSchema.methods.deleteToken = async function(token) {
+    try {
+        this.refreshTokens = this.refreshTokens.filter((token) => token.token !== token);
+    } 
+    catch (error) {
+        next(error); // Error Handleing Must revisit
+    };
+    return this.save();
+};
+
+
+
+export const user = mongooose.model("user",userSchema);
 
