@@ -1,9 +1,32 @@
 import mongooose from "mongoose";
 
+const refreshTokenSchema = new mongooose.Schema({
+    token : {
+        type:string,
+        required:[true,"Token invalid try again:Refresh token not found"],
+        default : null
+    },
+    replaceToken :{
+        type:string,
+        required:true,
+        unique:true,
+        default : null
+    },
+    revokedToken : {
+        type : boolean,
+        default : false
+    }
+}
+,{timestamps:true});
+
+export const refreshToken = mongooose.model("refreshToken",refreshTokenSchema);
+
 const userSchema = new mongooose.Schema({
     username : {
         type:string,
         required:[true,"Please provide a name"],
+        minlength : 3,
+        maxlength : 20
     },
     email : {
         type:string,
@@ -13,10 +36,13 @@ const userSchema = new mongooose.Schema({
     password : {
         type:string,
         required:[true,"Please provide a password"],
+        minlength : 5,
+        maxlength : 20
     },  
     goal : {
         type:string,
         required:[true,"Please provide a goal to arrange tasks"],
+        unique:true
     },
     goalInfo : {
         type:mongoose.models.ObjectId,
@@ -27,7 +53,8 @@ const userSchema = new mongooose.Schema({
     dailyroutine : {
         type : mongoose.model.ObjectId,
         ref :"routine"
-    }
+    },
+    refreshToken : [refreshTokenSchema] // an array can make multiple device login
 },
 {timestamps:true});
 
