@@ -17,4 +17,4 @@ const routinSchema = new mongoose.Schema ({
 },{timestamps:true});
 
 
-export const routine = mongoose.model("routine",routinSchema);mongoose
+export const routine = mongoose.model("routine",routinSchema);
