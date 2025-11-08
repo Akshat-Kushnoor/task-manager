@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "test": "start"
+    "start" : "server"
   },
   "author": "Akshat Amarnath Kushnoor",
   "license": "ISC",
