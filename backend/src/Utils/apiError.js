@@ -1,4 +1,12 @@
 class ApiError extends Error {
+
+/*must handle differently for different instances :
+    for controllers and routes => throw new apiError(404,"Route not found");
+    
+    
+
+*/
+
     constructor(
         statusCode,
         message = "Something went wrong",
@@ -6,7 +14,7 @@ class ApiError extends Error {
         stack = ""
     ) {
         super(message)
-        this.statusCode = statusCode;
+        this.statusCode = statusCode;            
         this.data = null
         this.message = message;
         this.error = errors;
@@ -15,6 +23,7 @@ class ApiError extends Error {
 
         if(stack) {
             this.stack = stack;
+            
         } else {
             Error.captureStackTrace(this, this.constructor);
         }

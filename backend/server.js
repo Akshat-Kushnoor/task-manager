@@ -1,20 +1,13 @@
-import express from "express";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import cookieParser from "cookie-parser";
+const http = require('http');
+const app = require('./app');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
-const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());  
- 
-app.get("/", (req, res) => {
-    res.send("beginning of the server: ");
-})
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+const server = http.createServer(app);
+
+server.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
