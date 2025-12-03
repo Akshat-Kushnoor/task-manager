@@ -1,7 +1,9 @@
-class ApiError extends Error {
+export class apiError extends Error {
 
 /*must handle differently for different instances :
     for controllers and routes => throw new apiError(404,"Route not found");
+    else throw normal error
+    must reconsider
     
     
 
@@ -30,4 +32,3 @@ class ApiError extends Error {
     }
 }
 
-export {ApiError};

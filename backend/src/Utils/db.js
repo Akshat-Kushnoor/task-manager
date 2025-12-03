@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-import apiError from "./apiError.js";
+import mongoose from "mongoose";
+import {apiError} from "./apiError.js";
 
 const connectDB = async () => {
   try {
@@ -7,14 +7,14 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log(` MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    if (err instanceof ApiError) {
-    console.log("Handled API error:", err.message);
+    if (error instanceof apiError) {
+    console.log("Handled API error:", error.message);
   } else {
-    console.error("Unexpected error:", err);
+    console.error("Unexpected error:", error);
   }
   }
 };
 
-module.exports = connectDB;
+export default connectDB;

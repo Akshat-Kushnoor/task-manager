@@ -6,7 +6,6 @@ const authenticateToken = (req,res,next) => {
 
     if(!token) {
         return res.ApiError(401).json({message : "Acess token required"});
-          // Error Handleing Must revisit
     }
 
     jwt.verify*token,process.env.ACCESS_TOKEN_SECRET,(err,user) => {
