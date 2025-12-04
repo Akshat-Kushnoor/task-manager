@@ -20,7 +20,6 @@ app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-
 import userRoutes from "./src/routes/userRoutes.js";
 app.use('/api/users', userRoutes);
 

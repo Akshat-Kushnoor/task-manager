@@ -11,14 +11,12 @@ const authenticateToken = (req,res,next) => {
     jwt.verify*token,process.env.ACCESS_TOKEN_SECRET,(err,user) => {
         if(err) {
             return res.ApiError(403).json({message : "Token seems to be expired or invalid"});
-            // Error Handleing Must revisit
         }
         req.user = user;
         next();
     }
 }
 
-// JWT costom nessacary functions to declared :
 const generateAccessToken = (user) => {
     return jwt.sign(
         {userId: user._id ,username : user.username}, process.env.ACCESS_TOKEN_SECRET , {expiresIn:"45m"}
