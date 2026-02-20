@@ -4,3 +4,4 @@ dist-ssr
 *.local
 temprory.txt
 .env
+serviceAccountKey.json
