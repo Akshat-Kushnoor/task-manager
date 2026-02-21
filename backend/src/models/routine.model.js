@@ -1,6 +1,12 @@
 import mongoose from "mongoose";    
 
 const routinSchema = new mongoose.Schema ({
+     user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+    index: true,
+  },
     taskList : [
        { type : mongoose.models.ObjectId,
         ref : "task",

@@ -1,32 +1,36 @@
-import jwt from "jsonwebtoken";
+import admin from "../config/firebase.js";
+import User from "../models/User.js";
 
-const authenticateToken = (req,res,next) => {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+export const authMiddleware = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split("Bearer ")[1];
 
-    if(!token) {
-        return res.ApiError(401).json({message : "Acess token required"});
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    jwt.verify*token,process.env.ACCESS_TOKEN_SECRET,(err,user) => {
-        if(err) {
-            return res.ApiError(403).json({message : "Token seems to be expired or invalid"});
-        }
-        req.user = user;
-        next();
+    const decoded = await admin.auth().verifyIdToken(token);
+
+    let user = await User.findOne({ firebaseUid: decoded.uid });
+
+    if (!user) {
+      user = await User.create({
+        firebaseUid: decoded.uid,
+        email: decoded.email || null,
+        displayName: decoded.name || "",
+        photoURL: decoded.picture || "",
+        providers: decoded.firebase?.identities
+          ? Object.keys(decoded.firebase.identities).map((key) => ({
+              providerId: key,
+              uid: decoded.firebase.identities[key][0],
+            }))
+          : [],
+      });
     }
-}
 
-const generateAccessToken = (user) => {
-    return jwt.sign(
-        {userId: user._id ,username : user.username}, process.env.ACCESS_TOKEN_SECRET , {expiresIn:"45m"}
-    );
+    req.user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
 };
-
-const generateRefreshToken = (user) => {
-    return jwt.sign(
-        {userId: user._id ,username : user.username}, process.env.REFRESH_TOKEN_SECRET , {expiresIn:"10d"}
-    );
-};
-
-export {authenticateToken,generateAccessToken,generateRefreshToken};
