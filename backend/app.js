@@ -23,5 +23,8 @@ app.get('/', (req, res) => {
 import userRoutes from "./src/routes/userRoutes.js";
 app.use('/api/users', userRoutes);
 
+import stemRoutes from "./src/routes/stemRoutes.js";
+app.use('/api', stemRoutes);
+
 
 export default app;

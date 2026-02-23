@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goal → Task → Routine API Architecture</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <style>
+    /* ============================================
+       CSS RESET & BASE STYLES
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #4F46E5;
+      --primary-light: #6366F1;
+      --primary-dark: #3730A3;
+      --primary-glow: rgba(79, 70, 229, 0.15);
+      --secondary: #06B6D4;
+      --secondary-light: #22D3EE;
+      --secondary-glow: rgba(6, 182, 212, 0.15);
+      --bg: #F9FAFB;
+      --bg-dark: #F3F4F6;
+      --card-bg: #FFFFFF;
+      --text-primary: #111827;
+      --text-secondary: #6B7280;
+      --text-muted: #9CA3AF;
+      --border: #E5E7EB;
+      --border-light: #F3F4F6;
+      --success: #10B981;
+      --success-glow: rgba(16, 185, 129, 0.15);
+      --warning: #F59E0B;
+      --warning-glow: rgba(245, 158, 11, 0.15);
+      --danger: #EF4444;
+      --danger-glow: rgba(239, 68, 68, 0.15);
+      --purple: #8B5CF6;
+      --purple-glow: rgba(139, 92, 246, 0.15);
+      --pink: #EC4899;
+      --pink-glow: rgba(236, 72, 153, 0.15);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.08);
+      --shadow-xl: 0 20px 60px rgba(0,0,0,0.1);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================
+       ANIMATIONS
+       ============================================ */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes fadeInRight {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes draw-line {
+      from { stroke-dashoffset: 1000; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    .animate-on-scroll {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .animate-on-scroll.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ============================================
+       NAVIGATION
+       ============================================ */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-light);
+      transition: all 0.3s ease;
+    }
+
+    nav.scrolled {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow-md);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+      background: var(--primary-glow);
+    }
+
+    .nav-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 8px;
+    }
+
+    .nav-toggle span {
+      width: 22px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    /* ============================================
+       HERO SECTION
+       ============================================ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, #EEF2FF 0%, var(--bg) 100%);
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 40%, var(--primary-glow) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 60%, var(--secondary-glow) 0%, transparent 50%),
+                  radial-gradient(circle at 50% 80%, var(--purple-glow) 0%, transparent 40%);
+      animation: gradient-shift 15s ease infinite;
+      background-size: 200% 200%;
+      pointer-events: none;
+    }
+
+    /* Grid dots background */
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px 6px 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      animation: fadeInDown 0.6s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero-badge-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .hero-badge-dot::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 2px solid var(--success);
+      animation: pulse-ring 2s infinite;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      animation: fadeInUp 0.7s ease 0.1s both;
+      letter-spacing: -0.03em;
+    }
+
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--purple) 100%);
+      background-size: 200% 200%;
+      animation: gradient-shift 5s ease infinite;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 36px;
+      animation: fadeInUp 0.7s ease 0.2s both;
+      line-height: 1.8;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.7s ease 0.3s both;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Floating shapes in hero */
+    .hero-shapes {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-shape {
+      position: absolute;
+      border-radius: var(--radius-lg);
+      opacity: 0.6;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .hero-shape-1 {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--primary-glow), transparent);
+      border: 2px solid rgba(79, 70, 229, 0.15);
+      top: 20%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .hero-shape-2 {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--secondary-glow), transparent);
+      border: 2px solid rgba(6, 182, 212, 0.15);
+      top: 30%;
+      right: 12%;
+      animation-delay: 1s;
+      border-radius: 50%;
+    }
+
+    .hero-shape-3 {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--purple-glow), transparent);
+      border: 2px solid rgba(139, 92, 246, 0.1);
+      bottom: 25%;
+      left: 8%;
+      animation-delay: 2s;
+    }
+
+    .hero-shape-4 {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, var(--warning-glow), transparent);
+      border: 2px solid rgba(245, 158, 11, 0.15);
+      bottom: 30%;
+      right: 8%;
+      animation-delay: 3s;
+      border-radius: 50%;
+    }
+
+    /* ============================================
+       SECTION COMMON STYLES
+       ============================================ */
+    section {
+      padding: 100px 24px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      background: var(--primary-glow);
+      padding: 6px 16px;
+      border-radius: 50px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ============================================
+       MODELS SECTION
+       ============================================ */
+    #models {
+      background: var(--bg);
+    }
+
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .model-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: all 0.4s ease;
+      position: relative;
+    }
+
+    .model-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+      border-color: transparent;
+    }
+
+    .model-card-accent {
+      height: 4px;
+      width: 100%;
+    }
+
+    .model-card:nth-child(1) .model-card-accent { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+    .model-card:nth-child(2) .model-card-accent { background: linear-gradient(90deg, var(--secondary), var(--secondary-light)); }
+    .model-card:nth-child(3) .model-card-accent { background: linear-gradient(90deg, var(--success), #34D399); }
+    .model-card:nth-child(4) .model-card-accent { background: linear-gradient(90deg, var(--purple), #A78BFA); }
+
+    .model-card:nth-child(1):hover { box-shadow: 0 12px 40px rgba(79, 70, 229, 0.12); }
+    .model-card:nth-child(2):hover { box-shadow: 0 12px 40px rgba(6, 182, 212, 0.12); }
+    .model-card:nth-child(3):hover { box-shadow: 0 12px 40px rgba(16, 185, 129, 0.12); }
+    .model-card:nth-child(4):hover { box-shadow: 0 12px 40px rgba(139, 92, 246, 0.12); }
+
+    .model-card-body {
+      padding: 28px;
+    }
+
+    .model-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .model-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .model-card:nth-child(1) .model-icon { background: var(--primary-glow); color: var(--primary); }
+    .model-card:nth-child(2) .model-icon { background: var(--secondary-glow); color: var(--secondary); }
+    .model-card:nth-child(3) .model-icon { background: var(--success-glow); color: var(--success); }
+    .model-card:nth-child(4) .model-icon { background: var(--purple-glow); color: var(--purple); }
+
+    .model-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .model-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 50px;
+      background: var(--bg);
+      color: var(--text-secondary);
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .model-fields {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .model-fields li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .model-fields li:hover {
+      background: var(--bg-dark);
+    }
+
+    .field-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .model-card:nth-child(1) .field-dot { background: var(--primary); }
+    .model-card:nth-child(2) .field-dot { background: var(--secondary); }
+    .model-card:nth-child(3) .field-dot { background: var(--success); }
+    .model-card:nth-child(4) .field-dot { background: var(--purple); }
+
+    .model-description {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    /* ============================================
+       ROUTES SECTION
+       ============================================ */
+    #routes {
+      background: linear-gradient(180deg, var(--bg) 0%, #EEF2FF 100%);
+    }
+
+    .routes-container {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .route-group {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: all 0.4s ease;
+    }
+
+    .route-group:hover {
+      box-shadow: var(--shadow-lg);
+      border-color: transparent;
+    }
+
+    .route-group-header {
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .route-group-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .route-group-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .route-group:nth-child(1) .route-group-icon { background: var(--secondary-glow); color: var(--secondary); }
+    .route-group:nth-child(2) .route-group-icon { background: var(--success-glow); color: var(--success); }
+    .route-group:nth-child(3) .route-group-icon { background: var(--purple-glow); color: var(--purple); }
+
+    .route-group-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .route-base-path {
+      font-size: 0.8rem;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      background: var(--bg);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-light);
+    }
+
+    .route-list {
+      padding: 8px 16px;
+    }
+
+    .route-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-light);
+      transition: all 0.2s ease;
+      border-radius: var(--radius-sm);
+    }
+
+    .route-item:last-child {
+      border-bottom: none;
+    }
+
+    .route-item:hover {
+      background: var(--bg);
+    }
+
+    .route-method {
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      min-width: 64px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .method-GET { background: var(--success-glow); color: var(--success); }
+    .method-POST { background: var(--primary-glow); color: var(--primary); }
+    .method-PUT { background: var(--warning-glow); color: var(--warning); }
+    .method-DELETE { background: var(--danger-glow); color: var(--danger); }
+
+    .route-path {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .route-path .param {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .route-desc {
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .route-arrow {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ============================================
+       WORKFLOW SECTION
+       ============================================ */
+    #workflow {
+      background: var(--bg);
+    }
+
+    .workflow-timeline {
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .workflow-timeline::before {
+      content: '';
+      position: absolute;
+      left: 28px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), var(--secondary), var(--purple));
+      border-radius: 2px;
+    }
+
+    .workflow-step {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      padding: 12px 0;
+      position: relative;
+    }
+
+    .workflow-step-number {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+      box-shadow: var(--shadow-md);
+    }
+
+    .workflow-step:nth-child(1) .workflow-step-number { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+    .workflow-step:nth-child(2) .workflow-step-number { background: linear-gradient(135deg, var(--secondary), var(--secondary-light)); }
+    .workflow-step:nth-child(3) .workflow-step-number { background: linear-gradient(135deg, var(--success), #34D399); }
+    .workflow-step:nth-child(4) .workflow-step-number { background: linear-gradient(135deg, var(--purple), #A78BFA); }
+    .workflow-step:nth-child(5) .workflow-step-number { background: linear-gradient(135deg, var(--pink), #F472B6); }
+
+    .workflow-step-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      flex: 1;
+      transition: all 0.3s ease;
+      margin-top: 6px;
+    }
+
+    .workflow-step-content:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateX(4px);
+    }
+
+    .workflow-step-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .workflow-step:nth-child(1) .workflow-step-label { color: var(--primary); }
+    .workflow-step:nth-child(2) .workflow-step-label { color: var(--secondary); }
+    .workflow-step:nth-child(3) .workflow-step-label { color: var(--success); }
+    .workflow-step:nth-child(4) .workflow-step-label { color: var(--purple); }
+    .workflow-step:nth-child(5) .workflow-step-label { color: var(--pink); }
+
+    .workflow-step-text {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* ============================================
+       DIAGRAM SECTION
+       ============================================ */
+    #diagram {
+      background: linear-gradient(180deg, #EEF2FF 0%, var(--bg) 100%);
+    }
+
+    .diagram-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .diagram-visual {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .diagram-visual::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, var(--border-light) 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .diagram-nodes {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .diagram-node {
+      text-align: center;
+      padding: 24px 20px;
+      border-radius: var(--radius-lg);
+      border: 2px solid;
+      background: var(--card-bg);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .diagram-node:hover {
+      transform: scale(1.05);
+    }
+
+    .diagram-node-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 12px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .diagram-node-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .diagram-node-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .node-user {
+      border-color: rgba(79, 70, 229, 0.3);
+    }
+    .node-user .diagram-node-icon {
+      background: var(--primary-glow);
+      color: var(--primary);
+    }
+    .node-user:hover { box-shadow: 0 8px 30px rgba(79, 70, 229, 0.15); }
+
+    .node-goal {
+      border-color: rgba(6, 182, 212, 0.3);
+    }
+    .node-goal .diagram-node-icon {
+      background: var(--secondary-glow);
+      color: var(--secondary);
+    }
+    .node-goal:hover { box-shadow: 0 8px 30px rgba(6, 182, 212, 0.15); }
+
+    .node-task {
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .node-task .diagram-node-icon {
+      background: var(--success-glow);
+      color: var(--success);
+    }
+    .node-task:hover { box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15); }
+
+    .diagram-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+    }
+
+    .diagram-arrow-line {
+      font-size: 1.5rem;
+      line-height: 1;
+      color: var(--border);
+      font-weight: 300;
+    }
+
+    .diagram-arrow-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 2px 10px;
+      border-radius: 50px;
+    }
+
+    /* Routine connection below */
+    .diagram-routine-row {
+      margin-top: 36px;
+      display: flex;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .diagram-routine-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--card-bg);
+      border: 2px solid rgba(139, 92, 246, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 20px 32px;
+      transition: all 0.3s ease;
+    }
+
+    .diagram-routine-card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 30px rgba(139, 92, 246, 0.15);
+    }
+
+    .diagram-routine-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--purple-glow);
+      color: var(--purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .diagram-routine-info {
+      text-align: left;
+    }
+
+    .diagram-routine-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .diagram-routine-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .diagram-connection-lines {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      margin-top: 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .connection-line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      color: var(--text-muted);
+    }
+
+    .connection-line svg {
+      width: 20px;
+      height: 24px;
+    }
+
+    .connection-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--purple);
+      background: var(--purple-glow);
+      padding: 2px 10px;
+      border-radius: 50px;
+    }
+
+    /* ============================================
+       SECURITY SECTION
+       ============================================ */
+    #security {
+      background: var(--bg);
+    }
+
+    .security-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .security-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .security-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .security-card:nth-child(1)::before { background: linear-gradient(90deg, var(--danger), #F87171); }
+    .security-card:nth-child(2)::before { background: linear-gradient(90deg, var(--warning), #FBBF24); }
+    .security-card:nth-child(3)::before { background: linear-gradient(90deg, var(--success), #34D399); }
+    .security-card:nth-child(4)::before { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+
+    .security-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .security-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .security-card:nth-child(1) .security-icon { background: var(--danger-glow); color: var(--danger); }
+    .security-card:nth-child(2) .security-icon { background: var(--warning-glow); color: var(--warning); }
+    .security-card:nth-child(3) .security-icon { background: var(--success-glow); color: var(--success); }
+    .security-card:nth-child(4) .security-icon { background: var(--primary-glow); color: var(--primary); }
+
+    .security-text h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .security-text p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    footer {
+      background: var(--text-primary);
+      color: rgba(255, 255, 255, 0.6);
+      padding: 48px 24px;
+      text-align: center;
+    }
+
+    .footer-content {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .footer-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .footer-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    footer p {
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+
+    .footer-divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      margin: 20px auto;
+      border-radius: 2px;
+    }
+
+    .footer-tech {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .footer-tech span {
+      padding: 4px 14px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN
+       ============================================ */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: var(--card-bg);
+        border-top: 1px solid var(--border);
+        padding: 16px;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .nav-toggle {
+        display: flex;
+      }
+
+      section {
+        padding: 64px 16px;
+      }
+
+      .section-header {
+        margin-bottom: 40px;
+      }
+
+      .models-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .route-group-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .route-item {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .route-desc {
+        margin-left: 78px;
+        white-space: normal;
+      }
+
+      .diagram-visual {
+        padding: 24px 16px;
+        overflow-x: auto;
+      }
+
+      .diagram-nodes {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .diagram-arrow {
+        transform: rotate(90deg);
+        padding: 8px 0;
+      }
+
+      .workflow-timeline::before {
+        left: 24px;
+      }
+
+      .workflow-step-number {
+        width: 48px;
+        height: 48px;
+        font-size: 0.95rem;
+      }
+
+      .workflow-step {
+        gap: 16px;
+      }
+
+      .workflow-step-content {
+        padding: 16px 18px;
+      }
+
+      .hero {
+        padding: 100px 16px 60px;
+      }
+
+      .security-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .diagram-routine-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .diagram-routine-info {
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+
+      .hero p {
+        font-size: 0.95rem;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .model-card-body {
+        padding: 20px;
+      }
+    }
+
+    /* ============================================
+       SCROLLBAR STYLING
+       ============================================ */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    /* ============================================
+       BACK TO TOP BUTTON
+       ============================================ */
+    .back-to-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .back-to-top:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(79, 70, 229, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       NAVIGATION
+       ============================================ -->
+  <nav id="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <i data-lucide="layers" style="width:20px;height:20px;color:white"></i>
+        </div>
+        API Architecture
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#models">Models</a></li>
+        <li><a href="#routes">Routes</a></li>
+        <li><a href="#workflow">Workflow</a></li>
+        <li><a href="#diagram">Diagram</a></li>
+        <li><a href="#security">Security</a></li>
+      </ul>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============================================
+       HERO SECTION
+       ============================================ -->
+  <section class="hero" id="hero">
+    <div class="hero-shapes">
+      <div class="hero-shape hero-shape-1"></div>
+      <div class="hero-shape hero-shape-2"></div>
+      <div class="hero-shape hero-shape-3"></div>
+      <div class="hero-shape hero-shape-4"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Express.js + MongoDB Architecture
+      </div>
+      <h1>
+        <span class="gradient-text">Goal → Task → Routine</span><br />
+        API Design
+      </h1>
+      <p>
+        Understanding nested routing and model relationships in a MERN stack application — from database schema to RESTful endpoints.
+      </p>
+      <div class="hero-buttons">
+        <a href="#models" class="btn btn-primary">
+          <i data-lucide="database" style="width:18px;height:18px"></i>
+          Explore Models
+        </a>
+        <a href="#routes" class="btn btn-secondary">
+          <i data-lucide="git-branch" style="width:18px;height:18px"></i>
+          View Routes
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       MODELS SECTION
+       ============================================ -->
+  <section id="models">
+    <div class="container">
+      <header class="section-header animate-on-scroll">
+        <span class="section-label">
+          <i data-lucide="database" style="width:14px;height:14px"></i>
+          Schema Design
+        </span>
+        <h2 class="section-title">Database Models</h2>
+        <p class="section-subtitle">
+          Four interconnected MongoDB models powering the application's core data layer.
+        </p>
+      </header>
+
+      <div class="models-grid">
+        <!-- User Model -->
+        <article class="model-card animate-on-scroll">
+          <div class="model-card-accent"></div>
+          <div class="model-card-body">
+            <div class="model-card-header">
+              <div class="model-icon">
+                <i data-lucide="user" style="width:24px;height:24px"></i>
+              </div>
+              <div>
+                <h3 class="model-name">User</h3>
+                <span class="model-tag">Authentication</span>
+              </div>
+            </div>
+            <ul class="model-fields">
+              <li><span class="field-dot"></span>name: String</li>
+              <li><span class="field-dot"></span>email: String</li>
+              <li><span class="field-dot"></span>password: String</li>
+            </ul>
+            <p class="model-description">
+              A user owns goals and routines. Tasks are created under goals.
+            </p>
+          </div>
+        </article>
+
+        <!-- Goal Model -->
+        <article class="model-card animate-on-scroll">
+          <div class="model-card-accent"></div>
+          <div class="model-card-body">
+            <div class="model-card-header">
+              <div class="model-icon">
+                <i data-lucide="target" style="width:24px;height:24px"></i>
+              </div>
+              <div>
+                <h3 class="model-name">Goal</h3>
+                <span class="model-tag">Core Entity</span>
+              </div>
+            </div>
+            <ul class="model-fields">
+              <li><span class="field-dot"></span>title: String</li>
+              <li><span class="field-dot"></span>deadline: Date</li>
+              <li><span class="field-dot"></span>priority: String</li>
+              <li><span class="field-dot"></span>user: ObjectId → User</li>
+            </ul>
+            <p class="model-description">
+              Each goal belongs to one user. Only the goal owner can manage its tasks.
+            </p>
+          </div>
+        </article>
+
+        <!-- Task Model -->
+        <article class="model-card animate-on-scroll">
+          <div class="model-card-accent"></div>
+          <div class="model-card-body">
+            <div class="model-card-header">
+              <div class="model-icon">
+                <i data-lucide="check-square" style="width:24px;height:24px"></i>
+              </div>
+              <div>
+                <h3 class="model-name">Task</h3>
+                <span class="model-tag">Nested Under Goal</span>
+              </div>
+            </div>
+            <ul class="model-fields">
+              <li><span class="field-dot"></span>title: String</li>
+              <li><span class="field-dot"></span>goal: ObjectId → Goal</li>
+              <li><span class="field-dot"></span>taskAssignedTo: ObjectId → User</li>
+            </ul>
+            <p class="model-description">
+              Each task belongs to one goal. It cannot exist without a goal.
+            </p>
+          </div>
+        </article>
+
+        <!-- Routine Model -->
+        <article class="model-card animate-on-scroll">
+          <div class="model-card-accent"></div>
+          <div class="model-card-body">
+            <div class="model-card-header">
+              <div class="model-icon">
+                <i data-lucide="repeat" style="width:24px;height:24px"></i>
+              </div>
+              <div>
+                <h3 class="model-name">Routine</h3>
+                <span class="model-tag">Independent</span>
+              </div>
+            </div>
+            <ul class="model-fields">
+              <li><span class="field-dot"></span>name: String</li>
+              <li><span class="field-dot"></span>user: ObjectId → User</li>
+              <li><span class="field-dot"></span>taskList: [ObjectId] → Task</li>
+            </ul>
+            <p class="model-description">
+              Routine groups tasks together. A routine belongs to a user.
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       ROUTES SECTION
+       ============================================ -->
+  <section id="routes">
+    <div class="container">
+      <header class="section-header animate-on-scroll">
+        <span class="section-label">
+          <i data-lucide="git-branch" style="width:14px;height:14px"></i>
+          Endpoints
+        </span>
+        <h2 class="section-title">API Routes Structure</h2>
+        <p class="section-subtitle">
+          RESTful endpoint design with nested routing for the Goal–Task relationship.
+        </p>
+      </header>
+
+      <div class="routes-container">
+        <!-- Goal Routes -->
+        <div class="route-group animate-on-scroll">
+          <div class="route-group-header">
+            <div class="route-group-title-wrap">
+              <div class="route-group-icon">
+                <i data-lucide="target" style="width:22px;height:22px"></i>
+              </div>
+              <h3 class="route-group-name">Goal Routes</h3>
+            </div>
+            <code class="route-base-path">/api/goals</code>
+          </div>
+          <div class="route-list">
+            <div class="route-item">
+              <span class="route-method method-POST">POST</span>
+              <span class="route-path">/api/goals</span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Create goal</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-GET">GET</span>
+              <span class="route-path">/api/goals</span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Get all goals</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-GET">GET</span>
+              <span class="route-path">/api/goals/<span class="param">:id</span></span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Get single goal</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-PUT">PUT</span>
+              <span class="route-path">/api/goals/<span class="param">:id</span></span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Update goal</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-DELETE">DEL</span>
+              <span class="route-path">/api/goals/<span class="param">:id</span></span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Delete goal</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nested Task Routes -->
+        <div class="route-group animate-on-scroll">
+          <div class="route-group-header">
+            <div class="route-group-title-wrap">
+              <div class="route-group-icon">
+                <i data-lucide="check-square" style="width:22px;height:22px"></i>
+              </div>
+              <h3 class="route-group-name">Nested Task Routes</h3>
+            </div>
+            <code class="route-base-path">/api/goals/:goalId/tasks</code>
+          </div>
+          <div class="route-list">
+            <div class="route-item">
+              <span class="route-method method-POST">POST</span>
+              <span class="route-path">/api/goals/<span class="param">:goalId</span>/tasks</span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Create task inside goal</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-GET">GET</span>
+              <span class="route-path">/api/goals/<span class="param">:goalId</span>/tasks</span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Get tasks of a goal</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-PUT">PUT</span>
+              <span class="route-path">/api/goals/<span class="param">:goalId</span>/tasks/<span class="param">:taskId</span></span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Update task</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-DELETE">DEL</span>
+              <span class="route-path">/api/goals/<span class="param">:goalId</span>/tasks/<span class="param">:taskId</span></span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Delete task</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Routine Routes -->
+        <div class="route-group animate-on-scroll">
+          <div class="route-group-header">
+            <div class="route-group-title-wrap">
+              <div class="route-group-icon">
+                <i data-lucide="repeat" style="width:22px;height:22px"></i>
+              </div>
+              <h3 class="route-group-name">Routine Routes</h3>
+            </div>
+            <code class="route-base-path">/api/routines</code>
+          </div>
+          <div class="route-list">
+            <div class="route-item">
+              <span class="route-method method-POST">POST</span>
+              <span class="route-path">/api/routines</span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Create routine</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-GET">GET</span>
+              <span class="route-path">/api/routines</span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Get user routines</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-POST">POST</span>
+              <span class="route-path">/api/routines/<span class="param">:id</span>/add-task</span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Add task to routine</span>
+            </div>
+            <div class="route-item">
+              <span class="route-method method-DELETE">DEL</span>
+              <span class="route-path">/api/routines/<span class="param">:id</span></span>
+              <span class="route-arrow">→</span>
+              <span class="route-desc">Delete routine</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       WORKFLOW SECTION
+       ============================================ -->
+  <section id="workflow">
+    <div class="container">
+      <header class="section-header animate-on-scroll">
+        <span class="section-label">
+          <i data-lucide="zap" style="width:14px;height:14px"></i>
+          Example
+        </span>
+        <h2 class="section-title">Workflow: Alice's Journey</h2>
+        <p class="section-subtitle">
+          A step-by-step walkthrough of how a user interacts with the API.
+        </p>
+      </header>
+
+      <div class="workflow-timeline">
+        <!-- Step 1 -->
+        <div class="workflow-step animate-on-scroll">
+          <div class="workflow-step-number">1</div>
+          <div class="workflow-step-content">
+            <div class="workflow-step-label">Create Goal</div>
+            <p class="workflow-step-text">
+              Alice creates a goal: <strong>"Complete MERN Stack Project"</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="workflow-step animate-on-scroll">
+          <div class="workflow-step-number">2</div>
+          <div class="workflow-step-content">
+            <div class="workflow-step-label">Add Tasks</div>
+            <p class="workflow-step-text">
+              Alice creates tasks under that goal — e.g., "Setup Backend", "Build React UI"
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="workflow-step animate-on-scroll">
+          <div class="workflow-step-number">3</div>
+          <div class="workflow-step-content">
+            <div class="workflow-step-label">Assign Task</div>
+            <p class="workflow-step-text">
+              Alice assigns the <strong>"Build React UI"</strong> task to Bob
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="workflow-step animate-on-scroll">
+          <div class="workflow-step-number">4</div>
+          <div class="workflow-step-content">
+            <div class="workflow-step-label">Create Routine</div>
+            <p class="workflow-step-text">
+              Alice creates a routine: <strong>"Morning Dev Sprint"</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="workflow-step animate-on-scroll">
+          <div class="workflow-step-number">5</div>
+          <div class="workflow-step-content">
+            <div class="workflow-step-label">Populate Routine</div>
+            <p class="workflow-step-text">
+              Alice adds selected tasks from her goals into the routine
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       DIAGRAM SECTION
+       ============================================ -->
+  <section id="diagram">
+    <div class="container">
+      <header class="section-header animate-on-scroll">
+        <span class="section-label">
+          <i data-lucide="git-merge" style="width:14px;height:14px"></i>
+          Architecture
+        </span>
+        <h2 class="section-title">Relationship Diagram</h2>
+        <p class="section-subtitle">
+          Visual representation of how models connect to each other.
+        </p>
+      </header>
+
+      <div class="diagram-wrapper animate-on-scroll">
+        <div class="diagram-visual">
+          <!-- Main row: User → Goal → Task -->
+          <div class="diagram-nodes">
+            <!-- User Node -->
+            <div class="diagram-node node-user">
+              <div class="diagram-node-icon">
+                <i data-lucide="user" style="width:28px;height:28px"></i>
+              </div>
+              <div class="diagram-node-name">User</div>
+              <div class="diagram-node-label">Owner</div>
+            </div>
+
+            <!-- Arrow -->
+            <div class="diagram-arrow">
+              <div class="diagram-arrow-line">→</div>
+              <span class="diagram-arrow-label">1 : N</span>
+            </div>
+
+            <!-- Goal Node -->
+            <div class="diagram-node node-goal">
+              <div class="diagram-node-icon">
+                <i data-lucide="target" style="width:28px;height:28px"></i>
+              </div>
+              <div class="diagram-node-name">Goal</div>
+              <div class="diagram-node-label">Parent Entity</div>
+            </div>
+
+            <!-- Arrow -->
+            <div class="diagram-arrow">
+              <div class="diagram-arrow-line">→</div>
+              <span class="diagram-arrow-label">1 : N</span>
+            </div>
+
+            <!-- Task Node -->
+            <div class="diagram-node node-task">
+              <div class="diagram-node-icon">
+                <i data-lucide="check-square" style="width:28px;height:28px"></i>
+              </div>
+              <div class="diagram-node-name">Task</div>
+              <div class="diagram-node-label">Child Entity</div>
+            </div>
+          </div>
+
+          <!-- Connection lines to Routine -->
+          <div class="diagram-connection-lines">
+            <div class="connection-line">
+              <svg viewBox="0 0 20 24" fill="none">
+                <path d="M10 0 L10 24" stroke="var(--purple)" stroke-width="2" stroke-dasharray="4 3" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Routine Row -->
+          <div class="diagram-routine-row">
+            <div class="diagram-routine-card">
+              <div class="diagram-routine-icon">
+                <i data-lucide="repeat" style="width:24px;height:24px"></i>
+              </div>
+              <div class="diagram-routine-info">
+                <div class="diagram-routine-name">Routine</div>
+                <div class="diagram-routine-desc">
+                  Belongs to User (1:N) · References Tasks (M:N)
+                </div>
+              </div>
+              <span class="connection-label">M : N with Tasks</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECURITY SECTION
+       ============================================ -->
+  <section id="security">
+    <div class="container">
+      <header class="section-header animate-on-scroll">
+        <span class="section-label">
+          <i data-lucide="shield" style="width:14px;height:14px"></i>
+          Protection
+        </span>
+        <h2 class="section-title">Authorization Logic</h2>
+        <p class="section-subtitle">
+          Security rules enforced across all endpoints to protect user data.
+        </p>
+      </header>
+
+      <div class="security-grid">
+        <!-- Rule 1 -->
+        <article class="security-card animate-on-scroll">
+          <div class="security-icon">
+            <i data-lucide="lock" style="width:22px;height:22px"></i>
+          </div>
+          <div class="security-text">
+            <h4>Goal Owner Authorization</h4>
+            <p>Only the goal owner can create, update, or delete its nested tasks.</p>
+          </div>
+        </article>
+
+        <!-- Rule 2 -->
+        <article class="security-card animate-on-scroll">
+          <div class="security-icon">
+            <i data-lucide="shield-check" style="width:22px;height:22px"></i>
+          </div>
+          <div class="security-text">
+            <h4>Routine Ownership</h4>
+            <p>Only the routine owner can modify or delete their routine.</p>
+          </div>
+        </article>
+
+        <!-- Rule 3 -->
+        <article class="security-card animate-on-scroll">
+          <div class="security-icon">
+            <i data-lucide="key" style="width:22px;height:22px"></i>
+          </div>
+          <div class="security-text">
+            <h4>JWT Token Identity</h4>
+            <p>User ID must always be extracted from the verified JWT token.</p>
+          </div>
+        </article>
+
+        <!-- Rule 4 -->
+        <article class="security-card animate-on-scroll">
+          <div class="security-icon">
+            <i data-lucide="alert-triangle" style="width:22px;height:22px"></i>
+          </div>
+          <div class="security-text">
+            <h4>Zero Client Trust</h4>
+            <p>Never trust client-sent user IDs — always validate server-side.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       FOOTER
+       ============================================ -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-logo">
+        <div class="footer-logo-icon">
+          <i data-lucide="layers" style="width:18px;height:18px;color:white"></i>
+        </div>
+        API Architecture
+      </div>
+      <p>
+        A visual guide to the Goal–Task–Routine API design built with Express.js and MongoDB.
+      </p>
+      <div class="footer-divider"></div>
+      <div class="footer-tech">
+        <span>Express.js</span>
+        <span>MongoDB</span>
+        <span>Mongoose</span>
+        <span>JWT</span>
+        <span>REST API</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <i data-lucide="chevron-up" style="width:22px;height:22px"></i>
+  </button>
+
+  <!-- ============================================
+       JAVASCRIPT
+       ============================================ -->
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // ---- Mobile Navigation Toggle ----
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    navToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+
+    // Close mobile nav when a link is clicked
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+      });
+    });
+
+    // ---- Navbar Scroll Effect ----
+    const navbar = document.getElementById('navbar');
+    const backToTop = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+
+      // Navbar background
+      if (scrollY > 50) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+
+      // Back to top button
+      if (scrollY > 400) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    });
+
+    // ---- Back to Top ----
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ---- Scroll Animations (Intersection Observer) ----
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -40px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+          // Stagger delay based on element index within its parent
+          const siblings = entry.target.parentElement.querySelectorAll('.animate-on-scroll');
+          let delay = 0;
+          siblings.forEach((sib, i) => {
+            if (sib === entry.target) delay = i * 80;
+          });
+
+          setTimeout(() => {
+            entry.target.classList.add('visible');
+          }, delay);
+
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>

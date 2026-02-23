@@ -1,5 +1,5 @@
 import express from "express";
-import User from "../models/User.js";
+import User from "../models/user.model.js";
 import { generateAccessToken, generateRefreshToken } from "../Utils/jwt.js";
 import asyncHandler from "../Utils/asyncHandler.js";
 import { apiError } from "../Utils/apiError.js";
