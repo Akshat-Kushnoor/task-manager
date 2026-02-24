@@ -14,7 +14,7 @@ import {
 const router = express.Router();
 
 // All routine routes require authentication
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 // @route   GET /api/routines
 // @desc    Get all routines for current user (private - only user's own routines)

@@ -8,13 +8,13 @@ const goalSchema = new mongoose.Schema({
     index: true,
   },
     goalname : {
-        type:string,
+        type:String,
         default : null,
         required:[true,"Please provide a goal name"],
         unique:true
      },
     goaldescription : {
-        type:string,
+        type:String,
         default : null,
         required:[true,"Please provide an description"]
     },
@@ -24,17 +24,17 @@ const goalSchema = new mongoose.Schema({
         required: [true,"Please provide a deadline for decribed goal"]
     },
     goalPriority : {
-        type : number,
+        type : Number,
         default : 1,
         required : [true,"Please provide a priority"]
     },
     goalType : {
-        type : string,
+        type : String,
         default : null,
         required : [true,"Please provide a type"]
     },
     goalStatus : {
-        type : boolean,
+        type : Boolean,
         default : false
     
     }

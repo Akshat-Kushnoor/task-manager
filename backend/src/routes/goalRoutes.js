@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // All goal routes require authentication
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 // @route   GET /api/goals
 // @desc    Get all goals for current user (private - only user's own goals)

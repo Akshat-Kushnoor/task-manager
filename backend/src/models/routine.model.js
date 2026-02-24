@@ -1,4 +1,4 @@
-import mongoose from "mongoose";    
+import mongoose from "mongoose";
 
 const routinSchema = new mongoose.Schema ({
      user: {
@@ -8,15 +8,14 @@ const routinSchema = new mongoose.Schema ({
     index: true,
   },
     taskList : [
-       { type : mongoose.models.ObjectId,
+       { type : mongoose.Schema.Types.ObjectId,
         ref : "task",
-        default : [],
         required : [true,"Please provide a list of tasks to design your routine for the day"]
       }
     ],
 
     isFollowed : {
-        type : boolean,
+        type : Boolean,
         default : false
     }
 

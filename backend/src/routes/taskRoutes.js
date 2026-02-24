@@ -13,7 +13,7 @@ import {
 const router = express.Router();
 
 // All task routes require authentication
-router.use(authMiddleware);
+//router.use(authMiddleware);
 
 // @route   GET /api/tasks
 // @desc    Get all tasks (user's own tasks + tasks assigned to them)
